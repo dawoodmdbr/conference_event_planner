@@ -1,10 +1,10 @@
 import React, {useState} from "react";
 import "./ConferenceEvent.css";
 import TotalCost from "./TotalCost";
+import {toggleMealSelection} from "./mealsSlice";
+import {incrementAvQuantity, decrementAvQuantity} from "./avSlice";
 import {useSelector, useDispatch} from "react-redux";
 import {incrementQuantity, decrementQuantity} from "./venueSlice";
-import {incrementAvQuantity, decrementAvQuantity} from "./avSlice";
-import {toggleMealSelection} from "./mealsSlice";
 const ConferenceEvent = () => {
     const [showItems, setShowItems] = useState(false);
     const [numberOfPeople, setNumberOfPeople] = useState(1);
@@ -52,7 +52,6 @@ const ConferenceEvent = () => {
 
     const getItemsFromTotalCost = () => {
         const items = [];
-
         venueItems.forEach((item) => {
             if (item.quantity > 0) {
                 items.push({...item, type: "venue"});
@@ -65,7 +64,7 @@ const ConferenceEvent = () => {
         });
         mealsItems.forEach((item) => {
             if (item.selected) {
-                const itemForDisplay = {...item, type: "meal"};
+                const itemForDisplay = {...item, type: "meals"};
                 if (item.numberOfPeople) {
                     itemForDisplay.numberOfPeople = numberOfPeople;
                 }
@@ -78,7 +77,7 @@ const ConferenceEvent = () => {
     const items = getItemsFromTotalCost();
 
     const ItemsDisplay = ({items}) => {
-        console.log("ItemsDisplay called with items:", items);
+        console.log(items);
         return (
             <>
                 <div className='display_box1'>
@@ -133,7 +132,6 @@ const ConferenceEvent = () => {
     const venueTotalCost = calculateTotalCost("venue");
     const avTotalCost = calculateTotalCost("av");
     const mealsTotalCost = calculateTotalCost("meals");
-
     const navigateToProducts = (idType) => {
         if (idType == "#venue" || idType == "#addons" || idType == "#meals") {
             if (showItems) {
@@ -142,11 +140,10 @@ const ConferenceEvent = () => {
             }
         }
     };
-
     const totalCosts = {
-        venue: calculateTotalCost("venue"),
-        addons: calculateTotalCost("av"),
-        meals: calculateTotalCost("meals"),
+        venue: venueTotalCost,
+        av: avTotalCost,
+        meals: mealsTotalCost,
     };
 
     return (
@@ -234,6 +231,7 @@ const ConferenceEvent = () => {
                             <div className='total_cost'>Total Cost: ${venueTotalCost}</div>
                         </div>
 
+                        {/*Necessary Add-ons*/}
                         <div id='addons' className='venue_container container_main'>
                             <div className='text'>
                                 <h1> Add-ons Selection</h1>
@@ -246,25 +244,21 @@ const ConferenceEvent = () => {
                                         </div>
                                         <div className='text'> {item.name} </div>
                                         <div> ${item.cost} </div>
-                                        <div className='button_container'>
-                                            <button
-                                                className={avItems[index].quantity === 0 ? " btn-warning btn-disabled" : "btn-warning btn-plus"}
-                                                onClick={() => handleDecrementAvQuantity(index)}>
-                                                &#8211;
+                                        <div className='addons_btn'>
+                                            <button className='btn-warning' onClick={() => handleDecrementAvQuantity(index)}>
+                                                {" "}
+                                                &ndash;{" "}
                                             </button>
-                                            <span className='selected_count'>
-                                                {avItems[index].quantity > 0 ? ` ${avItems[index].quantity}` : "0"}
-                                            </span>
-                                            <button
-                                                className={avItems[index].quantity === 10 ? " btn-success btn-disabled" : "btn-success btn-plus"}
-                                                onClick={() => handleIncrementAvQuantity(index)}>
-                                                &#43;
+                                            <span className='quantity-value'>{item.quantity}</span>
+                                            <button className=' btn-success' onClick={() => handleIncrementAvQuantity(index)}>
+                                                {" "}
+                                                &#43;{" "}
                                             </button>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                            <div className='total_cost'>Total Cost: ${avTotalCost}</div>
+                            <div className='total_cost'>Total Cost: {avTotalCost}</div>
                         </div>
 
                         {/* Meal Section */}
@@ -275,17 +269,19 @@ const ConferenceEvent = () => {
                             </div>
 
                             <div className='input-container venue_selection'>
-                                <label htmlFor='numberOfPeople'>
-                                    <h3>Number of People:</h3>
-                                </label>
-                                <input
-                                    type='number'
-                                    className='input_box5'
-                                    id='numberOfPeople'
-                                    value={numberOfPeople}
-                                    onChange={(e) => setNumberOfPeople(parseInt(e.target.value))}
-                                    min='1'
-                                />
+                                <div className='input-container venue_selection'>
+                                    <label htmlFor='numberOfPeople'>
+                                        <h3>Number of People:</h3>
+                                    </label>
+                                    <input
+                                        type='number'
+                                        className='input_box5'
+                                        id='numberOfPeople'
+                                        value={numberOfPeople}
+                                        onChange={(e) => setNumberOfPeople(parseInt(e.target.value))}
+                                        min='1'
+                                    />
+                                </div>
                             </div>
                             <div className='meal_selection'>
                                 {mealsItems.map((item, index) => (
@@ -303,12 +299,12 @@ const ConferenceEvent = () => {
                                     </div>
                                 ))}
                             </div>
-                            <div className='total_cost'>Total Cost: ${mealsTotalCost}</div>
+                            <div className='total_cost'>Total Cost: {mealsTotalCost}</div>
                         </div>
                     </div>
                 ) : (
                     <div className='total_amount_detail'>
-                        <TotalCost totalCosts={totalCosts} handleClick={handleToggleItems} ItemsDisplay={() => <ItemsDisplay items={items} />} />
+                        <TotalCost totalCosts={totalCosts} ItemsDisplay={() => <ItemsDisplay items={items} />} />
                     </div>
                 )}
             </div>
